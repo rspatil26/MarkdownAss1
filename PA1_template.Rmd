@@ -1,0 +1,66 @@
+---
+title: "Assignment 1"
+output: html_document
+---
+Raeding the activity data
+```{r setup, echo = TRUE}
+library(lubridate)
+activity <- read.csv("activity.csv",stringsAsFactors = FALSE,header = TRUE)
+activity$date <- ymd(activity$date)
+str(activity)
+```
+##Histogram of the total number of steps taken each day
+```{r,echo=TRUE}
+library(dplyr)
+activity <-tbl_df(activity)
+active <- group_by(activity,date)
+tot <- summarise(active,sum(steps,na.rm=TRUE))
+hist(tot$`sum(steps, na.rm = TRUE)`,breaks = 30, col="blue",ylim=c(0,10),xlab = "number of steps",main="Histogram of the total number of steps taken each day")
+
+```
+
+
+##mean and median of the total number of steps taken per day
+```{r,echo=TRUE}
+active <- group_by(activity,date)
+tot <- summarise(active,sum(steps,na.rm=TRUE))
+x <-summary(tot)
+Mean <-x[4,2]
+Median <-x[3,2]
+Mean
+Median
+```
+
+## time series plot 
+```{r,echo=TRUE}
+library(ggplot2)
+active <- group_by(activity,interval)
+ t<- summarise(active,mean(steps,na.rm=TRUE))
+ g <- ggplot(t,aes(interval,`mean(steps, na.rm = TRUE)`))
+g+geom_line(lwd=1,col="blue")+xlab("Interval")+ylab("Average Number of steps")
+maxinterval<- subset(t ,  t$`mean(steps, na.rm = TRUE)`== max(t$`mean(steps, na.rm = TRUE)`))
+maxinterval
+```
+
+## Imputing Missing values
+```{r,echo=TRUE}
+nrow(subset(activity,is.na(activity$steps)==TRUE))
+active$steps[is.na(active$steps)] <- mean (active$steps,na.rm=TRUE)
+active <- group_by(active,date)
+tot <- summarise(active,sum(steps,na.rm=TRUE))
+hist(tot$`sum(steps, na.rm = TRUE)`,breaks = 30, col="blue",ylim=c(0,10),xlab = "number of steps",main="Histogram of the total number of steps taken each day")
+x <-summary(tot)
+Mean <-x[4,2]
+Median <-x[3,2]
+Mean
+Median
+ 
+```
+##activity patterns between weekdays and weekends
+```{r,echo=TRUE}
+active$days <- weekdays(active$date)
+ weekdays1 <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+active$days <- factor((weekdays(active$date) %in% weekdays1), levels=c(FALSE, TRUE), labels=c('weekend', 'weekday'))
+g <- ggplot(active,aes(interval,steps))
+g+geom_line(lwd=1,col="blue")+facet_grid(days~.)
+```
